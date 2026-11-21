@@ -6,6 +6,9 @@ name: Build steam_api.dll only
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ fix/request-coplayer-avatars ]
+    paths: [ 'nextclient/steam_api_proxy/**', '.github/workflows/steam-api-only.yml' ]
 
 permissions:
   contents: read
