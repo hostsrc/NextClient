@@ -1,7 +1,8 @@
 # Quick build of steam_api.dll alone (the Steam API proxy), for testing changes to
 # nextclient/steam_api_proxy without building the whole client (no vcpkg, no CEF, no tests).
 # It compiles the same three files the CMake target uses on Windows, with its MSVC flags
-# (/GR- /WX /EHsc, static runtime, x86). Takes a few minutes instead of the full build.
+# (/GR- /WX /EHsc, static runtime, x86) and the Windows defines nitro_api passes on.
+# _CRT_SECURE_NO_WARNINGS silences C4996 (strncpy) in Valve's Steam headers.
 name: Build steam_api.dll only
 
 on:
@@ -34,7 +35,8 @@ jobs:
           set U=dep\NclNitroApi\dep\nitro_utils
           mkdir out
           cl /nologo /LD /O2 /MT /std:c++latest /EHsc /GR- /WX /W3 ^
-            /D_WINDOWS /DWIN32 /DSTEAM_API_EXPORTS /DSOURCEQUERY_STATIC ^
+            /D_WINDOWS /DWIN32 /D_WIN32 /D_WIN32_WINNT=0x0600 /DWINVER=0x0600 /DNOMINMAX /D_UNICODE ^
+            /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /DSTEAM_API_EXPORTS /DSOURCEQUERY_STATIC ^
             /I %P%\src /I %P%\src\public /I %P%\include /I %U%\include ^
             %P%\src\api_impl\SteamAPI.cpp %P%\src\api_impl\AvatarRequestingSteamFriends.cpp ^
             %U%\src\platform\platform_win32.cpp ^
