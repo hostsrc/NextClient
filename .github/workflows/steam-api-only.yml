@@ -1,0 +1,47 @@
+# Quick build of steam_api.dll alone (the Steam API proxy), for testing changes to
+# nextclient/steam_api_proxy without building the whole client (no vcpkg, no CEF, no tests).
+# It compiles the same three files the CMake target uses on Windows, with its MSVC flags
+# (/GR- /WX /EHsc, static runtime, x86). Takes a few minutes instead of the full build.
+name: Build steam_api.dll only
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  steam-api:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the nitro_utils sources (pinned submodule only)
+        run: git submodule update --init --depth 1 dep/NclNitroApi
+
+      - name: Set up MSVC x86
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: Compile steam_api.dll
+        shell: cmd
+        run: |
+          set P=nextclient\steam_api_proxy
+          set U=dep\NclNitroApi\dep\nitro_utils
+          mkdir out
+          cl /nologo /LD /O2 /MT /std:c++latest /EHsc /GR- /WX /W3 ^
+            /D_WINDOWS /DWIN32 /DSTEAM_API_EXPORTS /DSOURCEQUERY_STATIC ^
+            /I %P%\src /I %P%\src\public /I %P%\include /I %U%\include ^
+            %P%\src\api_impl\SteamAPI.cpp %P%\src\api_impl\AvatarRequestingSteamFriends.cpp ^
+            %U%\src\platform\platform_win32.cpp ^
+            /Fo:out\ /Fe:out\steam_api.dll /link psapi.lib user32.lib
+
+      - name: List exports (sanity check)
+        shell: cmd
+        run: dumpbin /exports out\steam_api.dll | findstr /R /C:"SteamFriends" /C:"SteamAPI_Init" /C:"NextSteamProxy"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: steam_api-${{ github.sha }}
+          path: out/steam_api.dll
