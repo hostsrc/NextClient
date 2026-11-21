@@ -1,6 +1,7 @@
 #include <steam/steam_api.h>
 #include <steam/steam_gameserver.h>
 #include <steam_api_proxy/next_steam_api_proxy.h>
+#include "AvatarRequestingSteamFriends.h"
 
 #ifdef _WINDOWS
 #include <Windows.h>
@@ -350,7 +351,19 @@ S_API ISteamFriends *SteamFriends()
     if (!SteamFriends_func)
         SteamFriends_func = reinterpret_cast<SteamFriends_Func>(GetProcAddress(g_ValueModule, "SteamFriends"));
 
-    return SteamFriends_func();
+    // Hand out a wrapper that also fetches other players' avatars (see AvatarRequestingSteamFriends.h).
+    // Steam returns the same interface pointer every time, so one wrapper per real pointer is enough.
+    static ISteamFriends* wrapped_real = nullptr;
+    static AvatarRequestingSteamFriends* wrapper = nullptr;
+    ISteamFriends* real = SteamFriends_func();
+    if (!real)
+        return nullptr;
+    if (real != wrapped_real)
+    {
+        wrapper = new AvatarRequestingSteamFriends(real);   // kept for the life of the process
+        wrapped_real = real;
+    }
+    return wrapper;
 }
 
 S_API ISteamUtils *SteamUtils()

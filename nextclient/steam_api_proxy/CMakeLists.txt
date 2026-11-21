@@ -19,6 +19,8 @@ endif ()
 
 add_library(${PROJECT_NAME} SHARED
         src/api_impl/SteamAPI.cpp
+        src/api_impl/AvatarRequestingSteamFriends.cpp
+        src/api_impl/AvatarRequestingSteamFriends.h
         src/public/steam/isteamapps.h
         src/public/steam/isteambilling.h
         src/public/steam/isteamclient.h
