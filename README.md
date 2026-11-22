@@ -1,0 +1,1 @@
+Screenshots for ValveSoftware/halflife#4043: CS 1.6 scoreboard on the same server, before and after calling RequestUserInformation for each player (NextClient 2.5.4.1 steam_api proxy). Player names and chat pixelated.
